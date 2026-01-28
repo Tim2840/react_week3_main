@@ -1,0 +1,39 @@
+.form-floating > .form-control {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  padding-left: 48px;
+}
+
+.form-floating > label {
+  padding-left: 48px;
+}
+
+.form-floating > .form-control:focus {
+  border-color: #ff9a9e;
+  box-shadow: 0 0 0 0.25rem rgba(255, 154, 158, 0.25);
+  background-color: #fff;
+}
+
+.form-control {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: border-color 0.3s;
+
+  &:focus {
+    border-color: #ff758c;
+    box-shadow: 0 0 0 0.2rem rgba(255, 117, 140, 0.25);
+  }
+}
+
+.form-label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
