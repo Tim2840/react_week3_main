@@ -1,1 +1,18 @@
-$background: rgb(223, 117, 135);
+$main-background: linear-gradient(135deg, #e7e6e6 0%, #ffd1f0 100%);
+
+$primary: #ff758c;
+$primary-light: #ff7eb3;
+$text-dark: #333;
+$text-muted: #666;
+
+// 後台穩重色系 (Backend Stable Colors)
+$backend-main: #2c3e50; // 深藍色 
+$backend-main-hover: #1a252f; // 更深的藍色
+$backend-main: #3c6382; // 稍微明亮一點的深藍色
+$backend-main-hover: #0a3d62; // 懸浮時變深
+$backend-danger: #c0392b; // 深紅色
+$backend-danger-hover: #a93226;
+$backend-secondary: #7f8c8d; // 穩重
+$backend-secondary-hover: #616d6d;
+
+$card-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);

@@ -17,7 +17,7 @@
   }
 }
 
-/* 表格樣式 */
+// 表格樣式
 .table-responsive {
   width: 100%;
   border-radius: 8px;
@@ -83,41 +83,68 @@
   background-color: #ffc107;
   border-color: #ffc107;
   color: #333;
+  box-shadow: none;
 
   &:hover {
     background-color: #ffb800;
     border-color: #ffb800;
     color: #333;
+    transform: translateY(-2px);
   }
 }
 
 .btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
+  background-color: $backend-danger;
+  border-color: $backend-danger;
+  color: #fff;
+  box-shadow: none;
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: #c82333;
-    border-color: #c82333;
+    background-color: $backend-danger-hover;
+    border-color: $backend-danger-hover;
+    transform: translateY(-2px);
   }
 }
 
 .btn-success {
   background-color: #28a745;
   border-color: #28a745;
+  box-shadow: none;
 
   &:hover {
     background-color: #218838;
     border-color: #218838;
+    transform: translateY(-2px);
   }
 }
 
 .btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
+  background-color: $backend-secondary;
+  border-color: $backend-secondary;
+  color: #fff;
+  box-shadow: none;
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: #5a6268;
-    border-color: #5a6268;
+    background-color: $backend-secondary-hover;
+    border-color: $backend-secondary-hover;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-action {
+  background-color: $backend-main;
+  color: #fff;
+  border: none;
+  box-shadow: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: $backend-main-hover;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: none;
   }
 }
 

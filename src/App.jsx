@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { Sparkles, LogIn, LogOut, Mail, Lock, Eye } from "lucide-react";
-import "./assets/style.css";
+import {
+  Sparkles,
+  LogIn,
+  LogOut,
+  Mail,
+  Lock,
+  NotebookPen,
+  Trash,
+  Plus,
+} from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -13,6 +21,7 @@ function App() {
     password: "",
   });
   const [isAuth, setIsAuth] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -30,8 +39,12 @@ function App() {
       const response = await axios.post(`${API_BASE}/admin/signin`, formData);
       console.log(response);
       const { token, expired } = response.data;
+
+      //儲存token到cookie內
       document.cookie = `hexToken=${token};expires=${new Date(expired)}`;
       axios.defaults.headers.common["Authorization"] = token;
+      setIsAuth(true);
+      fetchProducts();
       Swal.fire({
         icon: "success",
         title: "登入成功",
@@ -40,8 +53,6 @@ function App() {
         timer: 2050,
         timerProgressBar: true,
       });
-      setIsAuth(true);
-      await fetchProducts();
     } catch (error) {
       console.log(error);
       Swal.fire({
@@ -52,18 +63,42 @@ function App() {
     }
   };
 
+  const checkLogin = async () => {
+    try {
+      const response = await axios.post(`${API_BASE}/api/user/check`);
+      console.log(response.data);
+      setIsAuth(true);
+      await fetchProducts();
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "驗證失敗!",
+        text: `請重新登入!${error.response?.data?.message}`,
+      });
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsAuthLoading(true);
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("hexToken="))
+      ?.split("=")[1];
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = token;
+      checkLogin();
+    }
+  }, []);
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("hexToken="))
-        ?.split("=")[1];
-      axios.defaults.headers.common["Authorization"] = token;
       const response = await axios.get(
         `${API_BASE}/api/${API_PATH}/admin/products`,
       );
-      console.log("取得商品：", response.data);
+      console.log("取得商品：", response.data.products);
       setProducts(response.data.products);
     } catch (error) {
       console.log("取得商品失敗：", error);
@@ -74,6 +109,40 @@ function App() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const changeProductStatus = (targetId) => {
+    try {
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product.id === targetId
+            ? { ...product, is_enabled: !product.is_enabled }
+            : product,
+        ),
+      );
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "轉換狀態失敗",
+        text: `請稍後重試!${error}`,
+      });
+    }
+  };
+
+  const deleteProduct = async (targetId) => {
+    try {
+      const response = await axios.delete(
+        `${API_BASE}/api/${API_PATH}/admin/product/${targetId}`,
+      );
+      fetchProducts();
+    } catch (error) {
+      const errorMsg = error.response.data.message;
+      Swal.fire({
+        icon: "error",
+        title: "刪除失敗",
+        text: `請稍後重試!${errorMsg}`,
+      });
     }
   };
 
@@ -88,6 +157,19 @@ function App() {
       timer: 1500,
     });
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="container">
+        <div className="d-flex justify-content-center align-items-center flex-column vh-100">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <div>頁面重載中，請稍候...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -162,8 +244,12 @@ function App() {
           <main className="container-fluid flex-grow-1 px-4 py-4">
             {/* 標題 */}
             <div className="row mb-4">
-              <div className="col-12">
-                <h2 className="h3 mb-0">商品列表</h2>
+              <div className="col-12 d-flex justify-content-start align-items-center">
+                <h2 className="h3 mb-0 me-3">商品列表</h2>
+                <button className="btn-sm btn-action d-flex align-items-center pe-3">
+                  <Plus size={16} className="me-1" />
+                  新增商品
+                </button>
               </div>
             </div>
 
@@ -190,43 +276,68 @@ function App() {
                         <table className="product-table table-hover mb-0">
                           <thead className="table-light">
                             <tr>
-                              <th>商品名稱</th>
+                              <th className="col-md-1">類別</th>
+                              <th className="col-md-5">商品名稱</th>
                               <th>原價</th>
                               <th>售價</th>
-                              <th>是否啟用</th>
+                              <th className="col-md-1">是否啟用</th>
+                              <th className="col-md-2">編輯 / 刪除</th>
                               <th></th>
                             </tr>
                           </thead>
                           <tbody>
-                            {products.map((product) => (
-                              <tr key={product.id}>
-                                <td className="fw-500">{product.title}</td>
-                                <td>NT$ {product.origin_price}</td>
-                                <td className="text-danger fw-bold">
-                                  NT$ {product.price}
-                                </td>
-                                <td>
-                                  <span
-                                    className={`badge ${
-                                      product.is_enabled
-                                        ? "bg-success"
-                                        : "bg-secondary"
-                                    }`}
-                                  >
-                                    {product.is_enabled ? "啟用" : "停用"}
-                                  </span>
-                                </td>
-                                <td>
-                                  <button
-                                    className="btn btn-info btn-sm d-inline-flex align-items-center"
-                                    onClick={() => setSelectedProduct(product)}
-                                  >
-                                    <Eye size={16} className="me-1" />
-                                    查看詳情
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
+                            {products.map((product) => {
+                              const {
+                                id,
+                                category,
+                                title,
+                                origin_price,
+                                price,
+                                is_enabled,
+                              } = product;
+
+                              return (
+                                <tr key={id}>
+                                  <td className="fw-500">{category}</td>
+                                  <td className="fw-500">{title}</td>
+                                  <td>NT$ {origin_price}</td>
+                                  <td className="text-danger fw-bold">
+                                    NT$ {price}
+                                  </td>
+                                  <td>
+                                    <span
+                                      className={`badge ${
+                                        is_enabled
+                                          ? "bg-success"
+                                          : "bg-secondary"
+                                      }`}
+                                      onClick={() => changeProductStatus(id)}
+                                    >
+                                      {product.is_enabled ? "啟用" : "停用"}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    {/* {JSON.stringify(product)} */}
+                                    <button
+                                      className="btn btn-action btn-sm d-inline-flex align-items-center me-1"
+                                      onClick={() =>
+                                        setSelectedProduct(product)
+                                      }
+                                    >
+                                      <NotebookPen size={16} className="me-1" />
+                                      編輯
+                                    </button>
+                                    <button
+                                      className="btn btn-danger btn-sm d-inline-flex align-items-center"
+                                      onClick={() => deleteProduct(id)}
+                                    >
+                                      <Trash size={16} className="me-1" />
+                                      刪除
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -252,10 +363,15 @@ function App() {
               tabIndex="-1"
               onClick={() => setSelectedProduct(null)}
             >
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
+              <div className="modal-dialog modal-xl modal-dialog-centered">
+                <div
+                  className="modal-content"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   <div className="modal-header">
-                    <h5 className="modal-title">{selectedProduct.title}</h5>
+                    <h5 className="modal-title">編輯商品</h5>
                     <button
                       type="button"
                       className="btn-close"
@@ -263,46 +379,144 @@ function App() {
                     ></button>
                   </div>
                   <div className="modal-body">
-                    {selectedProduct.imageUrl && (
-                      <img
-                        src={selectedProduct.imageUrl}
-                        className="img-fluid rounded mb-3 w-100"
-                        alt={selectedProduct.title}
-                        style={{ maxHeight: "300px", objectFit: "cover" }}
-                      />
-                    )}
-                    <div className="mb-3">
-                      <label className="fw-bold text-muted">商品分類</label>
-                      <p>{selectedProduct.content || "未設定"}</p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold text-muted">商品描述</label>
-                      <p>{selectedProduct.description || "未設定"}</p>
-                    </div>
-                    <div className="row">
-                      <div className="col-6">
-                        <label className="fw-bold text-muted">原價</label>
-                        <p className="">NT$ {selectedProduct.origin_price}</p>
+                    <form>
+                      <div className="row">
+                        <div className="col-md-4">
+                          <div className="mb-3">
+                            <label htmlFor="imageUrl" className="form-label">
+                              主要圖片
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="imageUrl"
+                              placeholder="請輸入圖片連結"
+                              defaultValue={selectedProduct.imageUrl}
+                            />
+                          </div>
+                          {selectedProduct.imageUrl && (
+                            <img
+                              src={selectedProduct.imageUrl}
+                              className="img-fluid rounded"
+                              alt={selectedProduct.title}
+                            />
+                          )}
+                        </div>
+                        <div className="col-md-8">
+                          <div className="mb-3">
+                            <label htmlFor="title" className="form-label">
+                              標題
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="title"
+                              placeholder="請輸入標題"
+                              defaultValue={selectedProduct.title}
+                            />
+                          </div>
+                          <div className="row">
+                            <div className="col-md-6 mb-3">
+                              <label htmlFor="category" className="form-label">
+                                分類
+                              </label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="category"
+                                placeholder="請輸入分類"
+                                defaultValue={selectedProduct.category}
+                              />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                              <label htmlFor="unit" className="form-label">
+                                單位
+                              </label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="unit"
+                                placeholder="請輸入單位"
+                                defaultValue={selectedProduct.unit}
+                              />
+                            </div>
+                          </div>
+                          <div className="row">
+                            <div className="col-md-6 mb-3">
+                              <label
+                                htmlFor="origin_price"
+                                className="form-label"
+                              >
+                                原價
+                              </label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                id="origin_price"
+                                placeholder="請輸入原價"
+                                defaultValue={selectedProduct.origin_price}
+                              />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                              <label htmlFor="price" className="form-label">
+                                售價
+                              </label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                id="price"
+                                placeholder="請輸入售價"
+                                defaultValue={selectedProduct.price}
+                              />
+                            </div>
+                          </div>
+                          <hr />
+                          <div className="mb-3">
+                            <label
+                              htmlFor="description"
+                              className="form-label"
+                            >
+                              產品描述
+                            </label>
+                            <textarea
+                              className="form-control"
+                              id="description"
+                              rows="2"
+                              placeholder="請輸入產品描述"
+                              defaultValue={selectedProduct.description}
+                            ></textarea>
+                          </div>
+                          <div className="mb-3">
+                            <label htmlFor="content" className="form-label">
+                              說明內容
+                            </label>
+                            <textarea
+                              className="form-control"
+                              id="content"
+                              rows="2"
+                              placeholder="請輸入說明內容"
+                              defaultValue={selectedProduct.content}
+                            ></textarea>
+                          </div>
+                          <div className="mb-3">
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="is_enabled"
+                                defaultChecked={selectedProduct.is_enabled}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="is_enabled"
+                              >
+                                是否啟用
+                              </label>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="col-6">
-                        <label className="fw-bold text-muted">售價</label>
-                        <p className="">NT$ {selectedProduct.price}</p>
-                      </div>
-                    </div>
-                    <div className="mb-3">
-                      <label className="fw-bold text-muted">是否啟用</label>
-                      <p>
-                        <span
-                          className={`badge ${
-                            selectedProduct.is_enabled
-                              ? "bg-success"
-                              : "bg-secondary"
-                          }`}
-                        >
-                          {selectedProduct.is_enabled ? "啟用" : "停用"}
-                        </span>
-                      </p>
-                    </div>
+                    </form>
                   </div>
                   <div className="modal-footer">
                     <button
@@ -310,7 +524,10 @@ function App() {
                       className="btn btn-secondary"
                       onClick={() => setSelectedProduct(null)}
                     >
-                      關閉
+                      取消
+                    </button>
+                    <button type="button" className="btn btn-action">
+                      儲存變更
                     </button>
                   </div>
                 </div>
