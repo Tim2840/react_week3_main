@@ -58,7 +58,7 @@ function App() {
       Swal.fire({
         icon: "error",
         title: "登入失敗",
-        text: "請重新輸入帳號密碼!",
+        text: `請重新輸入帳號密碼!`,
       });
     }
   };
@@ -89,6 +89,9 @@ function App() {
     if (token) {
       axios.defaults.headers.common["Authorization"] = token;
       checkLogin();
+    } else {
+      console.log("目前還沒有token!");
+      setIsAuthLoading(false);
     }
   }, []);
 
@@ -277,7 +280,7 @@ function App() {
                           <thead className="table-light">
                             <tr>
                               <th className="col-md-1">類別</th>
-                              <th className="col-md-5">商品名稱</th>
+                              <th className="col-md-4">商品名稱</th>
                               <th>原價</th>
                               <th>售價</th>
                               <th className="col-md-1">是否啟用</th>
@@ -382,7 +385,7 @@ function App() {
                     <form>
                       <div className="row">
                         <div className="col-md-4">
-                          <div className="mb-3">
+                          <div className="flex-column mb-3">
                             <label htmlFor="imageUrl" className="form-label">
                               主要圖片
                             </label>
@@ -401,7 +404,43 @@ function App() {
                               alt={selectedProduct.title}
                             />
                           )}
+                          {/* 副圖 */}
+                          {selectedProduct.imagesUrl?.map((url, index) => (
+                            <div key={index} className="mb-3">
+                              <label className="form-label">
+                                副圖 {index + 1}
+                              </label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                placeholder={`圖片網址 ${index + 1}`}
+                                defaultValue={url}
+                              />
+                              {url && (
+                                <img
+                                  src={url}
+                                  className="img-fluid rounded mt-2"
+                                  alt={`副圖 ${index + 1}`}
+                                />
+                              )}
+                            </div>
+                          ))}
+                          <div className="d-flex justify-content-between mt-3">
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm w-100 me-2"
+                            >
+                              新增圖片
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm w-100"
+                            >
+                              刪除圖片
+                            </button>
+                          </div>
                         </div>
+
                         <div className="col-md-8">
                           <div className="mb-3">
                             <label htmlFor="title" className="form-label">
@@ -472,10 +511,7 @@ function App() {
                           </div>
                           <hr />
                           <div className="mb-3">
-                            <label
-                              htmlFor="description"
-                              className="form-label"
-                            >
+                            <label htmlFor="description" className="form-label">
                               產品描述
                             </label>
                             <textarea

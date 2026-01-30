@@ -1,9 +1,13 @@
 /* 後台管理樣式 */
+* {
+  transition: all 0.3s ease !important;
+}
+
 .admin-layout {
   background-color: #f5f5f5;
 
   .navbar-dark {
-    background-color: #2c3e50 !important;
+    background-color: $backend-navbar !important;
   }
 
   .navbar-brand {
@@ -14,6 +18,22 @@
   .btn-outline-light:hover {
     background-color: rgba(255, 255, 255, 0.2);
     border-color: #fff;
+  }
+
+  // 後台表單控制項 (覆蓋預設粉色風格)
+  .form-control:focus {
+    border-color: $backend-main;
+    box-shadow: 0 0 0 0.25rem rgba($backend-main, 0.25);
+  }
+
+  .form-check-input:focus {
+    border-color: $backend-main;
+    box-shadow: 0 0 0 0.25rem rgba($backend-main, 0.25);
+  }
+
+  .form-check-input:checked {
+    background-color: $backend-main;
+    border-color: $backend-main;
   }
 }
 
@@ -160,6 +180,15 @@
 .modal-overlay {
   background-color: rgba(0, 0, 0, 0.5);
   display: block;
+}
+
+.modal-header {
+  background-color: $backend-main;
+  color: #fff;
+
+  .btn-close {
+    filter: invert(1);
+  }
 }
 
 @media (max-width: 768px) {
