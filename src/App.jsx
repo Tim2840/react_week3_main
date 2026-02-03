@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
@@ -25,6 +25,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -206,6 +207,43 @@ function App() {
         title: selectedProduct.id ? "更新失敗" : "新增失敗",
         text: `請檢查欄位是否正確: ${errorMsg}`,
       });
+    }
+  };
+
+  const uploadImage = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file-to-upload", file);
+
+    try {
+      setLoading(true); // 重複使用現有的讀取狀態
+      const response = await axios.post(
+        `${API_BASE}/api/${API_PATH}/admin/upload`,
+        formData,
+      );
+      const { imageUrl } = response.data;
+      setSelectedProduct((prev) => ({
+        ...prev,
+        imageUrl: imageUrl,
+      }));
+      Swal.fire({
+        icon: "success",
+        title: "圖片上傳成功",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "圖片上傳失敗",
+        text: error.response?.data?.message || "發生錯誤",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -482,14 +520,29 @@ function App() {
                             <label htmlFor="imageUrl" className="form-label">
                               主要圖片
                             </label>
+                            <div className="input-group">
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                id="imageUrl"
+                                name="imageUrl"
+                                placeholder="請輸入圖片連結"
+                                value={selectedProduct.imageUrl}
+                                onChange={(e) => handleModalInputChange(e)}
+                              />
+                              <button
+                                className="btn btn-outline-secondary btn-sm"
+                                type="button"
+                                onClick={() => fileInputRef.current.click()}
+                              >
+                                上傳
+                              </button>
+                            </div>
                             <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              id="imageUrl"
-                              name="imageUrl"
-                              placeholder="請輸入圖片連結"
-                              value={selectedProduct.imageUrl}
-                              onChange={(e) => handleModalInputChange(e)}
+                              type="file"
+                              style={{ display: "none" }}
+                              ref={fileInputRef}
+                              onChange={uploadImage}
                             />
                           </div>
                           {selectedProduct.imageUrl && (
