@@ -402,7 +402,11 @@ function App() {
                                     <button
                                       className="btn btn-action btn-sm d-inline-flex align-items-center me-1"
                                       onClick={() =>
-                                        setSelectedProduct(product)
+                                        setSelectedProduct({
+                                          ...product,
+                                          imageUrl: product.imageUrl || "",
+                                          imagesUrl: product.imagesUrl || [],
+                                        })
                                       }
                                     >
                                       <NotebookPen size={16} className="me-1" />
@@ -439,10 +443,7 @@ function App() {
 
           {/* 商品詳細 Modal */}
           {selectedProduct && (
-            <div
-              className="modal fade show modal-overlay"
-              tabIndex="-1"
-            >
+            <div className="modal fade show modal-overlay" tabIndex="-1">
               <div className="modal-dialog modal-xl modal-dialog-centered">
                 <div
                   className="modal-content"
@@ -679,7 +680,7 @@ function App() {
                       className="btn btn-action"
                       onClick={() => updateProduct()}
                     >
-                      儲存變更
+                      {selectedProduct.id? "儲存變更" : "新增商品"}
                     </button>
                   </div>
                 </div>
