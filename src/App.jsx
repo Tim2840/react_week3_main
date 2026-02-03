@@ -115,27 +115,103 @@ function App() {
     }
   };
 
-  const changeProductStatus = (targetId) => {
+  const openAddProductModal = () => {
+    setSelectedProduct({
+      category: "",
+      content: "",
+      description: "",
+      id: "",
+      imageUrl: "",
+      imagesUrl: [],
+      is_enabled: 0,
+      origin_price: 0,
+      price: 0,
+      title: "",
+      unit: "",
+      num: 0,
+    });
+  };
+
+  const handleModalInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setSelectedProduct((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
+    }));
+  };
+
+  const handleImageChange = (value, index) => {
+    setSelectedProduct((prev) => {
+      const newImages = [...prev.imagesUrl];
+      newImages[index] = value;
+      return { ...prev, imagesUrl: newImages };
+    });
+  };
+
+  const deleteModalImg = () => {
+    setSelectedProduct((prevData) => {
+      const newImagesUrl = [...prevData.imagesUrl];
+      newImagesUrl.pop();
+      return { ...prevData, imagesUrl: newImagesUrl };
+    });
+  };
+
+  const addModalImg = (imgsLength) => {
+    if (imgsLength < 5) {
+      setSelectedProduct((prevData) => ({
+        ...prevData,
+        imagesUrl: [...prevData.imagesUrl, ""],
+      }));
+    } else {
+      return;
+    }
+  };
+
+  const updateProduct = async () => {
+    // 判斷是post還是put
+    const method = selectedProduct.id ? "put" : "post";
+    const url = selectedProduct.id
+      ? `${API_BASE}/api/${API_PATH}/admin/product/${selectedProduct.id}`
+      : `${API_BASE}/api/${API_PATH}/admin/product`;
+
     try {
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
-          product.id === targetId
-            ? { ...product, is_enabled: !product.is_enabled }
-            : product,
-        ),
-      );
+      // 準備要送出的資料，並確保各欄位的輸出格式正確
+      const productData = {
+        ...selectedProduct,
+        origin_price: Number(selectedProduct.origin_price || 0),
+        price: Number(selectedProduct.price || 0),
+        is_enabled: selectedProduct.is_enabled ? 1 : 0,
+        imagesUrl: selectedProduct.imagesUrl
+          ? selectedProduct.imagesUrl.filter((url) => url !== "")
+          : [],
+      };
+      const formatProductData = { data: productData };
+      const response = await axios[method](url, formatProductData);
+
+      console.log(response);
+      Swal.fire({
+        icon: "success",
+        title: selectedProduct.id ? "更新成功" : "新增成功",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      setSelectedProduct(null);
+      fetchProducts();
     } catch (error) {
+      const errorMsg = Array.isArray(error.response?.data?.message)
+        ? error.response.data.message.join("、")
+        : error.response?.data?.message || "操作失敗";
       Swal.fire({
         icon: "error",
-        title: "轉換狀態失敗",
-        text: `請稍後重試!${error}`,
+        title: selectedProduct.id ? "更新失敗" : "新增失敗",
+        text: `請檢查欄位是否正確: ${errorMsg}`,
       });
     }
   };
 
   const deleteProduct = async (targetId) => {
     try {
-      const response = await axios.delete(
+      await axios.delete(
         `${API_BASE}/api/${API_PATH}/admin/product/${targetId}`,
       );
       fetchProducts();
@@ -249,7 +325,10 @@ function App() {
             <div className="row mb-4">
               <div className="col-12 d-flex justify-content-start align-items-center">
                 <h2 className="h3 mb-0 me-3">商品列表</h2>
-                <button className="btn-sm btn-action d-flex align-items-center pe-3">
+                <button
+                  className="btn-sm btn-action d-flex align-items-center pe-3"
+                  onClick={() => openAddProductModal()}
+                >
                   <Plus size={16} className="me-1" />
                   新增商品
                 </button>
@@ -281,8 +360,8 @@ function App() {
                             <tr>
                               <th className="col-md-1">類別</th>
                               <th className="col-md-4">商品名稱</th>
-                              <th>原價</th>
-                              <th>售價</th>
+                              <th className="col-md-2">原價</th>
+                              <th className="col-md-2">售價</th>
                               <th className="col-md-1">是否啟用</th>
                               <th className="col-md-2">編輯 / 刪除</th>
                               <th></th>
@@ -320,7 +399,6 @@ function App() {
                                     </span>
                                   </td>
                                   <td>
-                                    {/* {JSON.stringify(product)} */}
                                     <button
                                       className="btn btn-action btn-sm d-inline-flex align-items-center me-1"
                                       onClick={() =>
@@ -364,7 +442,6 @@ function App() {
             <div
               className="modal fade show modal-overlay"
               tabIndex="-1"
-              onClick={() => setSelectedProduct(null)}
             >
               <div className="modal-dialog modal-xl modal-dialog-centered">
                 <div
@@ -374,7 +451,9 @@ function App() {
                   }}
                 >
                   <div className="modal-header">
-                    <h5 className="modal-title">編輯商品</h5>
+                    <h5 className="modal-title">
+                      {selectedProduct.id ? "編輯商品" : "新增商品"}
+                    </h5>
                     <button
                       type="button"
                       className="btn-close"
@@ -391,54 +470,71 @@ function App() {
                             </label>
                             <input
                               type="text"
-                              className="form-control"
+                              className="form-control form-control-sm"
                               id="imageUrl"
+                              name="imageUrl"
                               placeholder="請輸入圖片連結"
-                              defaultValue={selectedProduct.imageUrl}
+                              value={selectedProduct.imageUrl}
+                              onChange={(e) => handleModalInputChange(e)}
                             />
                           </div>
                           {selectedProduct.imageUrl && (
                             <img
                               src={selectedProduct.imageUrl}
-                              className="img-fluid rounded"
+                              className="img-fluid rounded d-block mx-auto"
                               alt={selectedProduct.title}
+                              style={{ maxWidth: "200px", maxHeight: "200px" }}
                             />
                           )}
-                          {/* 副圖 */}
-                          {selectedProduct.imagesUrl?.map((url, index) => (
-                            <div key={index} className="mb-3">
-                              <label className="form-label">
-                                副圖 {index + 1}
-                              </label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                placeholder={`圖片網址 ${index + 1}`}
-                                defaultValue={url}
-                              />
-                              {url && (
-                                <img
-                                  src={url}
-                                  className="img-fluid rounded mt-2"
-                                  alt={`副圖 ${index + 1}`}
-                                />
-                              )}
-                            </div>
-                          ))}
-                          <div className="d-flex justify-content-between mt-3">
+                          {/* 操作圖片 */}
+                          <div className="d-flex justify-content-between mt-3 mb-3">
                             <button
                               type="button"
                               className="btn btn-outline-primary btn-sm w-100 me-2"
+                              onClick={() =>
+                                addModalImg(selectedProduct.imagesUrl.length)
+                              }
                             >
                               新增圖片
                             </button>
                             <button
                               type="button"
                               className="btn btn-outline-danger btn-sm w-100"
+                              onClick={() => deleteModalImg()}
                             >
                               刪除圖片
                             </button>
                           </div>
+                          {/* 副圖 */}
+
+                          {selectedProduct.imagesUrl.map((url, index) => (
+                            <div key={index} className="mb-3">
+                              <label className="form-label">
+                                副圖 {index + 1}
+                              </label>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder={`圖片網址 ${index + 1}`}
+                                // 副圖的 name 屬性不需要，因為 handleImageChange 已經透過 index 處理
+                                value={url}
+                                onChange={(e) =>
+                                  handleImageChange(e.target.value, index)
+                                }
+                              />
+                              {url && (
+                                <img
+                                  src={url}
+                                  className="img-fluid rounded mt-2 d-block mx-auto"
+                                  alt={`副圖 ${index + 1}`}
+                                  style={{
+                                    maxWidth: "200px",
+                                    maxHeight: "200px",
+                                  }}
+                                />
+                              )}
+                            </div>
+                          ))}
                         </div>
 
                         <div className="col-md-8">
@@ -450,8 +546,10 @@ function App() {
                               type="text"
                               className="form-control"
                               id="title"
+                              name="title"
                               placeholder="請輸入標題"
-                              defaultValue={selectedProduct.title}
+                              value={selectedProduct.title}
+                              onChange={(e) => handleModalInputChange(e)}
                             />
                           </div>
                           <div className="row">
@@ -463,8 +561,10 @@ function App() {
                                 type="text"
                                 className="form-control"
                                 id="category"
+                                name="category"
                                 placeholder="請輸入分類"
-                                defaultValue={selectedProduct.category}
+                                value={selectedProduct.category}
+                                onChange={(e) => handleModalInputChange(e)}
                               />
                             </div>
                             <div className="col-md-6 mb-3">
@@ -475,8 +575,10 @@ function App() {
                                 type="text"
                                 className="form-control"
                                 id="unit"
+                                name="unit"
                                 placeholder="請輸入單位"
-                                defaultValue={selectedProduct.unit}
+                                value={selectedProduct.unit}
+                                onChange={(e) => handleModalInputChange(e)}
                               />
                             </div>
                           </div>
@@ -492,8 +594,10 @@ function App() {
                                 type="number"
                                 className="form-control"
                                 id="origin_price"
+                                name="origin_price"
                                 placeholder="請輸入原價"
-                                defaultValue={selectedProduct.origin_price}
+                                value={selectedProduct.origin_price}
+                                onChange={(e) => handleModalInputChange(e)}
                               />
                             </div>
                             <div className="col-md-6 mb-3">
@@ -504,8 +608,10 @@ function App() {
                                 type="number"
                                 className="form-control"
                                 id="price"
+                                name="price"
                                 placeholder="請輸入售價"
-                                defaultValue={selectedProduct.price}
+                                value={selectedProduct.price}
+                                onChange={(e) => handleModalInputChange(e)}
                               />
                             </div>
                           </div>
@@ -518,8 +624,10 @@ function App() {
                               className="form-control"
                               id="description"
                               rows="2"
+                              name="description"
                               placeholder="請輸入產品描述"
-                              defaultValue={selectedProduct.description}
+                              value={selectedProduct.description}
+                              onChange={(e) => handleModalInputChange(e)}
                             ></textarea>
                           </div>
                           <div className="mb-3">
@@ -530,8 +638,10 @@ function App() {
                               className="form-control"
                               id="content"
                               rows="2"
+                              name="content"
                               placeholder="請輸入說明內容"
-                              defaultValue={selectedProduct.content}
+                              value={selectedProduct.content}
+                              onChange={(e) => handleModalInputChange(e)}
                             ></textarea>
                           </div>
                           <div className="mb-3">
@@ -540,7 +650,9 @@ function App() {
                                 className="form-check-input"
                                 type="checkbox"
                                 id="is_enabled"
-                                defaultChecked={selectedProduct.is_enabled}
+                                name="is_enabled"
+                                checked={!!selectedProduct.is_enabled}
+                                onChange={(e) => handleModalInputChange(e)}
                               />
                               <label
                                 className="form-check-label"
@@ -549,6 +661,7 @@ function App() {
                                 是否啟用
                               </label>
                             </div>
+                            {JSON.stringify(selectedProduct)}
                           </div>
                         </div>
                       </div>
@@ -562,7 +675,10 @@ function App() {
                     >
                       取消
                     </button>
-                    <button type="button" className="btn btn-action">
+                    <button
+                      className="btn btn-action"
+                      onClick={() => updateProduct()}
+                    >
                       儲存變更
                     </button>
                   </div>
