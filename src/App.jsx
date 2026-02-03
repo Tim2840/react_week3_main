@@ -209,14 +209,27 @@ function App() {
     }
   };
 
-  const deleteProduct = async (targetId) => {
+  const deleteProduct = async (targetId, title) => {
     try {
-      await axios.delete(
-        `${API_BASE}/api/${API_PATH}/admin/product/${targetId}`,
-      );
-      fetchProducts();
+      const result = await Swal.fire({
+        title: `確定要刪除商品 "${title}" 嗎?`,
+        text: `刪除後將無法復原`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#949494",
+        confirmButtonText: "刪除",
+        cancelButtonText: "取消",
+      });
+
+      if (result.isConfirmed) {
+        await axios.delete(
+          `${API_BASE}/api/${API_PATH}/admin/product/${targetId}`,
+        );
+        fetchProducts();
+      }
     } catch (error) {
-      const errorMsg = error.response.data.message;
+      const errorMsg = error.response?.data?.message || "操作失敗";
       Swal.fire({
         icon: "error",
         title: "刪除失敗",
@@ -414,7 +427,7 @@ function App() {
                                     </button>
                                     <button
                                       className="btn btn-danger btn-sm d-inline-flex align-items-center"
-                                      onClick={() => deleteProduct(id)}
+                                      onClick={() => deleteProduct(id, title)}
                                     >
                                       <Trash size={16} className="me-1" />
                                       刪除
@@ -662,7 +675,7 @@ function App() {
                                 是否啟用
                               </label>
                             </div>
-                            {JSON.stringify(selectedProduct)}
+                            {/* {JSON.stringify(selectedProduct)} */}
                           </div>
                         </div>
                       </div>
@@ -670,17 +683,17 @@ function App() {
                   </div>
                   <div className="modal-footer">
                     <button
+                      className="btn btn-action"
+                      onClick={() => updateProduct()}
+                    >
+                      {selectedProduct.id ? "儲存變更" : "新增商品"}
+                    </button>
+                    <button
                       type="button"
                       className="btn btn-secondary"
                       onClick={() => setSelectedProduct(null)}
                     >
                       取消
-                    </button>
-                    <button
-                      className="btn btn-action"
-                      onClick={() => updateProduct()}
-                    >
-                      {selectedProduct.id? "儲存變更" : "新增商品"}
                     </button>
                   </div>
                 </div>
