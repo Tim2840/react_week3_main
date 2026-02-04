@@ -1,3 +1,5 @@
+@use "./variables";
+
 /* 後台管理樣式 */
 * {
   transition: all 0.3s ease !important;
@@ -7,7 +9,7 @@
   background-color: #f5f5f5;
 
   .navbar-dark {
-    background-color: $backend-navbar !important;
+    background-color: variables.$backend-navbar !important;
   }
 
   .navbar-brand {
@@ -22,18 +24,18 @@
 
   // 後台表單控制項 (覆蓋預設粉色風格)
   .form-control:focus {
-    border-color: $backend-main;
-    box-shadow: 0 0 0 0.25rem rgba($backend-main, 0.25);
+    border-color: variables.$backend-main;
+    box-shadow: 0 0 0 0.25rem rgba(variables.$backend-main, 0.25);
   }
 
   .form-check-input:focus {
-    border-color: $backend-main;
-    box-shadow: 0 0 0 0.25rem rgba($backend-main, 0.25);
+    border-color: variables.$backend-main;
+    box-shadow: 0 0 0 0.25rem rgba(variables.$backend-main, 0.25);
   }
 
   .form-check-input:checked {
-    background-color: $backend-main;
-    border-color: $backend-main;
+    background-color: variables.$backend-main;
+    border-color: variables.$backend-main;
   }
 }
 
@@ -114,15 +116,15 @@
 }
 
 .btn-danger {
-  background-color: $backend-danger;
-  border-color: $backend-danger;
+  background-color: variables.$backend-danger;
+  border-color: variables.$backend-danger;
   color: #fff;
   box-shadow: none;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: $backend-danger-hover;
-    border-color: $backend-danger-hover;
+    background-color: variables.$backend-danger-hover;
+    border-color: variables.$backend-danger-hover;
     transform: translateY(-2px);
   }
 }
@@ -140,28 +142,28 @@
 }
 
 .btn-secondary {
-  background-color: $backend-secondary;
-  border-color: $backend-secondary;
+  background-color: variables.$backend-secondary;
+  border-color: variables.$backend-secondary;
   color: #fff;
   box-shadow: none;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: $backend-secondary-hover;
-    border-color: $backend-secondary-hover;
+    background-color: variables.$backend-secondary-hover;
+    border-color: variables.$backend-secondary-hover;
     transform: translateY(-2px);
   }
 }
 
 .btn-action {
-  background-color: $backend-main;
+  background-color: variables.$backend-main;
   color: #fff;
   border: none;
   box-shadow: none;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: $backend-main-hover;
+    background-color: variables.$backend-main-hover;
     color: #fff;
     transform: translateY(-2px);
     box-shadow: none;
@@ -183,7 +185,7 @@
 }
 
 .modal-header {
-  background-color: $backend-main;
+  background-color: variables.$backend-main-hover;
   color: #fff;
 
   .btn-close {

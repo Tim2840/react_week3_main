@@ -220,7 +220,7 @@ function App() {
     formData.append("file-to-upload", file);
 
     try {
-      setLoading(true); // 重複使用現有的讀取狀態
+      setLoading(true);
       const response = await axios.post(
         `${API_BASE}/api/${API_PATH}/admin/upload`,
         formData,
@@ -444,7 +444,6 @@ function App() {
                                           ? "bg-success"
                                           : "bg-secondary"
                                       }`}
-                                      onClick={() => changeProductStatus(id)}
                                     >
                                       {product.is_enabled ? "啟用" : "停用"}
                                     </span>
@@ -531,7 +530,7 @@ function App() {
                                 onChange={(e) => handleModalInputChange(e)}
                               />
                               <button
-                                className="btn btn-outline-secondary btn-sm"
+                                className="btn btn-action btn-sm"
                                 type="button"
                                 onClick={() => fileInputRef.current.click()}
                               >
@@ -542,7 +541,7 @@ function App() {
                               type="file"
                               style={{ display: "none" }}
                               ref={fileInputRef}
-                              onChange={uploadImage}
+                              onChange={(e) => uploadImage(e)}
                             />
                           </div>
                           {selectedProduct.imageUrl && (
@@ -573,7 +572,6 @@ function App() {
                             </button>
                           </div>
                           {/* 副圖 */}
-
                           {selectedProduct.imagesUrl.map((url, index) => (
                             <div key={index} className="mb-3">
                               <label className="form-label">
